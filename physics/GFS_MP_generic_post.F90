@@ -13,23 +13,23 @@
 !! will be called.  the tallies are then summed in calwxt_dominant(). For GFDL cloud MP scheme, determine convective 
 !! rain/snow by surface temperature;  and determine explicit rain/snow by rain/snow coming out directly from MP.
 !! 
-!> \section arg_table_GFS_MP_generic_post_run Argument Table
+!! \section arg_table_GFS_MP_generic_post_run Argument Table
 !! \htmlinclude GFS_MP_generic_post_run.html
 !!
 !> \section gfs_mp_gen GFS MP Generic Post General Algorithm
 !> @{
       subroutine GFS_MP_generic_post_run(                                                                                 &
         im, levs, kdt, nrcm, nncl, ntcw, ntrac, imp_physics, imp_physics_gfdl, imp_physics_thompson, imp_physics_nssl,    &
-        imp_physics_mg, imp_physics_fer_hires, cal_pre, cplflx, cplchm, cpllnd, progsigma, con_g, rhowater, rainmin, dtf, &
-        frain, rainc, rain1, rann, xlat, xlon, gt0, gq0, prsl, prsi, phii, tsfc, ice, snow, graupel, save_t, save_q,      &
-        rain0, ice0, snow0, graupel0, del, rain, domr_diag, domzr_diag, domip_diag, doms_diag, tprcp, srflag, sr, cnvprcp,&
-        totprcp, totice, totsnw, totgrp, cnvprcpb, totprcpb, toticeb, totsnwb, totgrpb, rain_cpl, rainc_cpl, snow_cpl,    &
-        pwat, frzr, frzrb, frozr, frozrb, tsnowp, tsnowpb, rhonewsn1, exticeden,                                          & 
+        imp_physics_mg, imp_physics_fer_hires, cal_pre, cplflx, cplchm, con_g, rainmin, dtf, frain, rainc,                &
+        rain1, rann, xlat, xlon, gt0, gq0, prsl, prsi, phii, tsfc, ice, snow, graupel, save_t, save_q, rain0, ice0, snow0,&
+        graupel0, del, rain, domr_diag, domzr_diag, domip_diag, doms_diag, tprcp, srflag, sr, cnvprcp, totprcp, totice,   &
+        totsnw, totgrp, cnvprcpb, totprcpb, toticeb, totsnwb, totgrpb, rain_cpl, rainc_cpl, snow_cpl, pwat,               &
         drain_cpl, dsnow_cpl, lsm, lsm_ruc, lsm_noahmp, raincprv, rainncprv, iceprv, snowprv,                             &
         graupelprv, draincprv, drainncprv, diceprv, dsnowprv, dgraupelprv, dtp, dfi_radar_max_intervals,                  &
-        dtend, dtidx, index_of_temperature, index_of_process_mp,ldiag3d, qdiag3d,dqdt_qmicro, lssav, num_dfi_radar,       &
-        fh_dfi_radar,index_of_process_dfi_radar, ix_dfi_radar, dfi_radar_tten, radar_tten_limits, fhour, prevsq,      &
-        iopt_lake, iopt_lake_clm, lkm, use_lake_model, errmsg, errflg)
+        dtend, dtidx, index_of_temperature, index_of_process_mp,ldiag3d, qdiag3d, lssav, num_dfi_radar, fh_dfi_radar,     &
+        index_of_process_dfi_radar, ix_dfi_radar, dfi_radar_tten, radar_tten_limits, fhour,          &
+        do_mlp_mp, tmptend, qmptend, &
+        errmsg, errflg)
 !
       use machine, only: kind_phys
       use calpreciptype_mod, only: calpreciptype
@@ -37,9 +37,9 @@
 
       integer, intent(in) :: im, levs, kdt, nrcm, nncl, ntcw, ntrac, num_dfi_radar, index_of_process_dfi_radar
       integer, intent(in) :: imp_physics, imp_physics_gfdl, imp_physics_thompson, imp_physics_mg, imp_physics_fer_hires
-      integer, intent(in) :: imp_physics_nssl, iopt_lake_clm, iopt_lake, lkm
-      logical, intent(in) :: cal_pre, lssav, ldiag3d, qdiag3d, cplflx, cplchm, cpllnd, progsigma, exticeden
-      integer, intent(in) :: index_of_temperature,index_of_process_mp,use_lake_model(:)
+      integer, intent(in) :: imp_physics_nssl
+      logical, intent(in) :: cal_pre, lssav, ldiag3d, qdiag3d, cplflx, cplchm,do_mlp_mp
+      integer, intent(in) :: index_of_temperature,index_of_process_mp
 
       integer                                                :: dfi_radar_max_intervals
       real(kind=kind_phys),                    intent(in)    :: fh_dfi_radar(:), fhour
@@ -47,7 +47,7 @@
       integer                                                :: ix_dfi_radar(:)
       real(kind=kind_phys), dimension(:,:),    intent(inout) :: gt0
 
-      real(kind=kind_phys),                    intent(in)    :: dtf, frain, con_g, rainmin, rhowater
+      real(kind=kind_phys),                    intent(in)    :: dtf, frain, con_g, rainmin
       real(kind=kind_phys), dimension(:),      intent(in)    :: rain1, xlat, xlon, tsfc
       real(kind=kind_phys), dimension(:),      intent(inout) :: ice, snow, graupel, rainc
       real(kind=kind_phys), dimension(:),      intent(in)    :: rain0, ice0, snow0, graupel0
@@ -67,6 +67,9 @@
       real(kind=kind_phys), dimension(:,:,:),   intent(inout) :: dtend
       integer,         dimension(:,:), intent(in)    :: dtidx
 
+!mlp
+      real(kind=kind_phys), dimension(:,:),intent(inout)    :: tmptend,qmptend
+!mlp,
       ! Stochastic physics / surface perturbations
       real(kind=kind_phys), dimension(:),      intent(inout) :: drain_cpl, dsnow_cpl
 
@@ -82,15 +85,7 @@
       real(kind=kind_phys), dimension(:),      intent(inout) :: diceprv
       real(kind=kind_phys), dimension(:),      intent(inout) :: dsnowprv
       real(kind=kind_phys), dimension(:),      intent(inout) :: dgraupelprv
-      real(kind=kind_phys), dimension(:),      intent(inout) :: frzr
-      real(kind=kind_phys), dimension(:),      intent(inout) :: frzrb
-      real(kind=kind_phys), dimension(:),      intent(inout) :: frozr
-      real(kind=kind_phys), dimension(:),      intent(inout) :: frozrb
-      real(kind=kind_phys), dimension(:),      intent(inout) :: tsnowp
-      real(kind=kind_phys), dimension(:),      intent(inout) :: tsnowpb
-      real(kind=kind_phys), dimension(:),      intent(inout) :: rhonewsn1
-      real(kind=kind_phys), dimension(:,:),    intent(inout) :: dqdt_qmicro
-      real(kind=kind_phys), dimension(:,:),    intent(inout) :: prevsq
+
       real(kind=kind_phys),                    intent(in)    :: dtp
 
       ! CCPP error handling
@@ -109,9 +104,6 @@
       real(kind=kind_phys) :: crain, csnow, onebg, tem, total_precip, tem1, tem2, ttend
       real(kind=kind_phys), dimension(im) :: domr, domzr, domip, doms, t850, work1
 
-      real :: snowrat,grauprat,icerat,curat,prcpncfr,prcpcufr
-      real :: rhonewsnow,rhoprcpice,rhonewgr,rhonewice
-
       ! Initialize CCPP error handling variables
       errmsg = ''
       errflg = 0
@@ -121,68 +113,6 @@
       do i = 1, im
         rain(i) = rainc(i) + frain * rain1(i) ! time-step convective plus explicit
       enddo
-
-! compute surface snowfall, graupel/sleet, freezing rain and precip ice density
-      if (imp_physics == imp_physics_gfdl .or. imp_physics == imp_physics_thompson .or. imp_physics == imp_physics_nssl ) then
-         do i = 1, im
-            if (gt0(i,1) .le. 273) then
-               frzr(i) = frzr(i) + rain0(i)
-               frzrb(i) = frzrb(i) + rain0(i)
-            endif
-            tsnowp(i)  = tsnowp(i)  + snow0(i)
-            tsnowpb(i)  = tsnowpb(i)  + snow0(i)
-            frozr(i) = frozr(i) + graupel0(i)
-            frozrb(i) = frozrb(i) + graupel0(i)
-         enddo
-!Compute the variable precip ice density for specific LSM schemes and options
-         if (exticeden) then
-            snowrat = 0.
-            grauprat = 0.
-            icerat = 0.
-            prcpncfr = 0.
-            prcpcufr = 0.
-            curat = 0.
-            prcpncfr = 0.
-            prcpcufr = 0.
-            rhonewsnow = 0.
-            rhonewgr = 0.
-            rhonewice = 0.
-            rhoprcpice = 0.
-            do i = 1, im
-               rhonewsn1(i)= 200.
-               prcpncfr = rain1(i)*sr(i)
-               if(sr(i) > 0..and. gt0(i,1) < 273.) then
-                  prcpcufr = max(0.,rainc(i)*sr(i))
-               else
-                  if(gt0(i,1) < 273.) then
-                     prcpcufr = max(0.,rainc(i))
-                  else
-                     prcpcufr = 0.
-                  endif  ! gt0(i,1) < 273.
-               endif ! frzfrac > 0.
-!
-               if((prcpncfr + prcpcufr) > 0.) then
-! -- calculate snow, graupel and ice fractions in falling frozen precip
-                  snowrat=min(1.,max(0.,snow0(i)/(prcpncfr + prcpcufr)))
-                  grauprat=min(1.,max(0.,graupel0(i)/(prcpncfr + prcpcufr)))
-                  icerat=min(1.,max(0.,(prcpncfr-snow0(i)-graupel0(i)) &
-                     /(prcpncfr + prcpcufr)))
-                  curat=min(1.,max(0.,(prcpcufr/(prcpncfr + prcpcufr))))
-
-                  rhonewsnow=min(125.,1000.0/max(8.,(17.*tanh((276.65-gt0(i,1))*0.15))))
-                  rhonewgr=min(500.,rhowater/max(2.,(3.5*tanh((274.15-gt0(i,1))*0.3333))))
-                  rhonewice=rhonewsnow
-!--- compute density of "precip ice" from weighted contribution
-!                 of snow, graupel and ice fractions
-
-                  rhoprcpice = min(500.,max(58.8,(rhonewsnow*snowrat +  &
-                      rhonewgr*grauprat + rhonewice*icerat + rhonewgr*curat)))
-! from now on rhonewsn1 is the density of falling frozen precipitation
-                  rhonewsn1(i)=rhoprcpice
-               endif
-            enddo
-         endif
-      endif
 
 !> - If requested (e.g. Zhao-Carr MP scheme), call calpreciptype() to calculate dominant 
 !! precipitation type.
@@ -228,13 +158,6 @@
           dgraupelprv(:) = tem * graupelprv(:)
           diceprv(:)     = tem * iceprv(:)
         end if
-      else if(lkm>0 .and. iopt_lake==iopt_lake_clm) then
-        do i=1,im
-          if(use_lake_model(i)>0) then
-            raincprv(i)   = rainc(i)
-            rainncprv(i)  = frain * rain1(i)
-          end if
-        end do
       end if
 
       if (cal_pre) then       ! hchuang: add dominant precipitation type algorithm
@@ -329,7 +252,7 @@
       ! Conversion factor from mm per day to m per physics timestep 
       tem = dtp * con_p001 / con_day
 
-!> - For GFDL, Thompson and NSSL MP schemes, determine convective snow by surface temperature;
+!> - For GFDL and Thompson MP scheme, determine convective snow by surface temperature;
 !! and determine explicit rain/snow by snow/ice/graupel coming out directly from MP
 !! and convective rainfall from the cumulus scheme if the surface temperature is below
 !! \f$0^oC\f$.
@@ -434,16 +357,18 @@
         endif if_tendency_diagnostics
       endif if_save_fields
 
-      !If prognostic updraft area fraction is used in saSAS
-      if(progsigma)then
-         do k=1,levs
+!jwb/sam mlp
+        if (do_mlp_mp) then
+          !print*,"getting tend mp post"
+          do k=1,levs
             do i=1,im
-               dqdt_qmicro(i,k)=(gq0(i,k,1)-save_q(i,k,1))/dtp
+               tmptend(i,k) = gt0(i,k)-save_t(i,k)
+               qmptend(i,k) = gq0(i,k,1)-save_q(i,k,1)
             enddo
-         enddo
-      endif
-
-      if (cplflx .or. cplchm .or. cpllnd) then
+           enddo
+        endif
+!jwb/sam mlp
+      if (cplflx .or. cplchm) then
         do i = 1, im
           dsnow_cpl(i)= max(zero, rain(i) * srflag(i))
           drain_cpl(i)= max(zero, rain(i) - dsnow_cpl(i))
@@ -452,7 +377,7 @@
         enddo
       endif
 
-      if (cplchm .or. cpllnd) then
+      if (cplchm) then
         do i = 1, im
           rainc_cpl(i) = rainc_cpl(i) + rainc(i)
         enddo
@@ -478,13 +403,6 @@
         pwat(i) = pwat(i) * onebg
       enddo
 
-      if(progsigma)then      
-         do k = 1, levs
-            do i=1, im
-               prevsq(i,k) = gq0(i,k,1)
-            enddo
-         enddo
-      endif
 
       end subroutine GFS_MP_generic_post_run
 !> @}

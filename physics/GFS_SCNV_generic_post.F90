@@ -14,17 +14,21 @@
         rainc, cnvprcp, cnvprcpb, cnvw_phy_f3d, cnvc_phy_f3d,                      &
         dtend, dtidx, index_of_temperature, index_of_x_wind, index_of_y_wind,      &
         index_of_process_scnv, ntqv, flag_for_scnv_generic_tend,                   &
-        ntcw,ntiw,ntclamt,ntrw,ntsw,ntrnc,ntsnc,ntgl,ntgnc,ntsigma,                &
+        ntcw,ntiw,ntclamt,ntrw,ntsw,ntrnc,ntsnc,ntgl,ntgnc,                        &
         imfshalcnv, imfshalcnv_sas, imfshalcnv_samf, ntrac,                        &
-        cscnv, satmedmf, trans_trac, ras, errmsg, errflg)
+        cscnv, satmedmf, trans_trac, ras, do_mlp_shalcnv,                          &
+        tshalcnvtend,qshalcnvtend,ushalcnvtend,vshalcnvtend,errmsg, errflg)
 
       use machine,               only: kind_phys
 
       implicit none
 
       integer, intent(in) :: im, levs, nn, ntqv, nsamftrac
-      integer, intent(in) :: ntcw,ntiw,ntclamt,ntrw,ntsw,ntrnc,ntsnc,ntgl,ntgnc,ntsigma,ntrac
+      integer, intent(in) :: ntcw,ntiw,ntclamt,ntrw,ntsw,ntrnc,ntsnc,ntgl,ntgnc,ntrac
       logical, intent(in) :: lssav, ldiag3d, qdiag3d, flag_for_scnv_generic_tend
+
+!mlp
+      logical, intent(in) :: do_mlp_shalcnv
       real(kind=kind_phys),                     intent(in) :: frain
       real(kind=kind_phys), dimension(:,:), intent(in) :: gu0, gv0, gt0
       real(kind=kind_phys), dimension(:,:), intent(in) :: save_u, save_v, save_t
@@ -35,6 +39,12 @@
       integer, intent(in) :: dtidx(:,:)
       integer, intent(in) :: index_of_temperature, index_of_x_wind, index_of_y_wind, index_of_process_scnv
       real(kind=kind_phys), dimension(:,:,:), intent(in) :: clw
+
+!mlp
+      real(kind=kind_phys), dimension(:,:), intent(inout) :: tshalcnvtend  
+      real(kind=kind_phys), dimension(:,:), intent(inout) :: qshalcnvtend  
+      real(kind=kind_phys), dimension(:,:), intent(inout) :: ushalcnvtend  
+      real(kind=kind_phys), dimension(:,:), intent(inout) :: vshalcnvtend  
 
       ! Post code for SAS/SAMF
       integer, intent(in) :: npdf3d, num_p3d, ncnvcld3d
@@ -103,7 +113,7 @@
              do n=2,ntrac
                 if ( n /= ntcw  .and. n /= ntiw  .and. n /= ntclamt .and. &
                      n /= ntrw  .and. n /= ntsw  .and. n /= ntrnc   .and. &
-                     n /= ntsnc .and. n /= ntgl  .and. n /= ntgnc   .and. n /= ntsigma) then
+                     n /= ntsnc .and. n /= ntgl  .and. n /= ntgnc) then
                    tracers = tracers + 1
                    idtend = dtidx(100+n,index_of_process_scnv)
                    if(idtend>0) then
@@ -126,6 +136,19 @@
         endif
       endif
 
+!jwb/sam mlp
+         !print*,"about to get tend scnv post"
+        if (do_mlp_shalcnv) then
+         !print*,"getting tend scnv post"
+          do k=1,levs
+            do i=1,im
+              tshalcnvtend(i,k) = gt0(i,k) - save_t(i,k)
+              ushalcnvtend(i,k) = gu0(i,k) - save_u(i,k)
+              vshalcnvtend(i,k) = gv0(i,k) - save_v(i,k)
+              qshalcnvtend(i,k) = gq0(i,k,ntqv) - save_q(i,k,ntqv)
+            enddo
+          enddo
+        endif
       end subroutine GFS_SCNV_generic_post_run
 
       end module GFS_SCNV_generic_post

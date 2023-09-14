@@ -162,13 +162,6 @@
   dimensions = ()
   type = logical
   intent = in
-[ntsigma]
-  standard_name = index_of_updraft_area_fraction_in_tracer_concentration_array
-  long_name = tracer index of updraft_area_fraction
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
 [ntcw]
   standard_name = index_of_cloud_liquid_water_mixing_ratio_in_tracer_concentration_array
   long_name = tracer index for cloud condensate (or liquid water)
@@ -246,6 +239,13 @@
   units = count
   dimensions = ()
   type = integer
+  intent = in
+[do_mlp_shalcnv]
+  standard_name = flag_for_mlp_stochastic_physics_perturbations_from_shallow_convection
+  long_name = flag for mlp stochastic physics perturbations from shallow convection
+  units = flag
+  dimensions = ()
+  type = logical
   intent = in
 [errmsg]
   standard_name = ccpp_error_message

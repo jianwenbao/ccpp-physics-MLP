@@ -98,6 +98,41 @@
   dimensions = ()
   type = logical
   intent = in
+[do_mlp]
+  standard_name = flag_for_mlp
+  long_name = flag for mlp physics perturbations
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+[do_mlp_cnv]
+  standard_name = flag_for_mlp_stochastic_physics_perturbations_from_convection
+  long_name = flag for mlp stochastic physics perturbations from convection
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+[do_mlp_mp]
+  standard_name = flag_for_mlp_stochastic_physics_perturbations_from_microphysics
+  long_name = flag for mlp stochastic physics perturbations from microphysics
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+[do_mlp_pbl]
+  standard_name = flag_for_mlp_stochastic_physics_perturbations_from_pbl
+  long_name = flag for mlp stochastic physics perturbations from pbl
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+[do_mlp_shalcnv]
+  standard_name = flag_for_mlp_stochastic_physics_perturbations_from_shallow_convection
+  long_name = flag for mlp stochastic physics perturbations from shallow convection
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
 [pert_mp]
   standard_name = flag_for_stochastic_microphysics_perturbations
   long_name = flag for stochastic microphysics physics perturbations
@@ -168,6 +203,118 @@
   standard_name = sppt_weights_from_coupled_process
   long_name = weights for stochastic sppt perturbation
   units = none
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[mlp_pert_tcnv]
+  standard_name = mlp_temperature_perturbation_due_to_convection
+  long_name = mlp temperature perturbation due to convection
+  units = K
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[mlp_pert_qcnv]
+  standard_name = mlp_specific_humidity_perturbation_due_to_convection
+  long_name = mlp specific humidity temperature perturbation due to convection
+  units = kg kg-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[mlp_pert_ucnv]
+  standard_name = mlp_uvelocity_perturbation_due_to_convection
+  long_name = mlp uvelocity temperature perturbation due to convection
+  units = m s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[mlp_pert_vcnv]
+  standard_name = mlp_vvelocity_perturbation_due_to_convection
+  long_name = mlp vvelocity temperature perturbation due to convection
+  units = m s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[mlp_pert_tmp]
+  standard_name = mlp_temperature_perturbation_due_to_microphysics
+  long_name = mlp temperature perturbation due to microphysics
+  units = K
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[mlp_pert_qmp]
+  standard_name = mlp_specific_humidity_perturbation_due_to_microphysics
+  long_name = mlp specific humidity temperature perturbation due to microphysics
+  units = kg kg-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[mlp_pert_tpbl]
+  standard_name = mlp_temperature_perturbation_due_to_pbl
+  long_name = mlp temperature perturbation due to pbl
+  units = K
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[mlp_pert_qpbl]
+  standard_name = mlp_specific_humidity_perturbation_due_to_pbl
+  long_name = mlp specific humidity temperature perturbation due to pbl
+  units = kg kg-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[mlp_pert_upbl]
+  standard_name = mlp_uvelocity_perturbation_due_to_pbl
+  long_name = mlp uvelocity temperature perturbation due to pbl
+  units = m s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[mlp_pert_vpbl]
+  standard_name = mlp_vvelocity_perturbation_due_to_pbl
+  long_name = mlp vvelocity temperature perturbation due to pbl
+  units = m s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[mlp_pert_tshalcnv]
+  standard_name = mlp_temperature_perturbation_due_to_shallow_convection
+  long_name = mlp temperature perturbation due to shallow convection
+  units = K
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[mlp_pert_qshalcnv]
+  standard_name = mlp_specific_humidity_perturbation_due_to_shallow_convection
+  long_name = mlp specific humidity temperature perturbation due to shallow convection
+  units = kg kg-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[mlp_pert_ushalcnv]
+  standard_name = mlp_uvelocity_perturbation_due_to_shallow_convection
+  long_name = mlp uvelocity temperature perturbation due to shallow convection
+  units = m s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[mlp_pert_vshalcnv]
+  standard_name = mlp_vvelocity_perturbation_due_to_shallow_convection
+  long_name = mlp vvelocity temperature perturbation due to shallow convection
+  units = m s-1
   dimensions = (horizontal_loop_extent,vertical_layer_dimension)
   type = real
   kind = kind_phys
@@ -415,13 +562,6 @@
 [cplflx]
   standard_name = flag_for_surface_flux_coupling
   long_name = flag controlling cplflx collection (default off)
-  units = flag
-  dimensions = ()
-  type = logical
-  intent = in
-[cpllnd]
-  standard_name = flag_for_land_coupling
-  long_name = flag controlling cpllnd collection (default off)
   units = flag
   dimensions = ()
   type = logical

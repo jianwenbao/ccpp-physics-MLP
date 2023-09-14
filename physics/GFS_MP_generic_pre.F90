@@ -9,14 +9,14 @@
 !> \section arg_table_GFS_MP_generic_pre_run Argument Table
 !! \htmlinclude GFS_MP_generic_pre_run.html
 !!
-      subroutine GFS_MP_generic_pre_run(im, levs, ldiag3d, qdiag3d, do_aw, progsigma, ntcw, nncl, &
-                                        ntrac, gt0, gq0, save_t, save_q, num_dfi_radar, errmsg, errflg)
+      subroutine GFS_MP_generic_pre_run(im, levs, ldiag3d, qdiag3d, do_aw, ntcw, nncl, &
+                                        ntrac, gt0, gq0, save_t, save_q, num_dfi_radar, do_mlp_mp,errmsg, errflg)
 !
       use machine,               only: kind_phys
 
       implicit none
       integer,                                intent(in) :: im, levs, ntcw, nncl, ntrac, num_dfi_radar
-      logical,                                intent(in) :: ldiag3d, qdiag3d, do_aw, progsigma
+      logical,                                intent(in) :: ldiag3d, qdiag3d, do_aw,do_mlp_mp
       real(kind=kind_phys), dimension(:,:),   intent(in) :: gt0
       real(kind=kind_phys), dimension(:,:,:), intent(in) :: gq0
 
@@ -32,15 +32,16 @@
       errmsg = ''
       errflg = 0
 
-      if (ldiag3d .or. do_aw .or. num_dfi_radar>0) then
+      if (ldiag3d .or. do_aw .or. num_dfi_radar>0.or.do_mlp_mp) then
+        !  print*,"getting tend mp pre"
         do k=1,levs
           do i=1,im
             save_t(i,k) = gt0(i,k)
           enddo
         enddo
       endif
-      if (ldiag3d .or. do_aw .or. progsigma) then
-        if(qdiag3d) then
+      if (ldiag3d .or. do_aw.or.do_mlp_mp) then
+        if(qdiag3d.or.do_mlp_mp) then
            do n=1,ntrac
               do k=1,levs
                  do i=1,im
@@ -48,7 +49,7 @@
                  enddo
               enddo
            enddo
-        else if(do_aw .or. progsigma) then
+        else if(do_aw) then
            ! if qdiag3d, all q are saved already
            save_q(1:im,:,1) = gq0(1:im,:,1)
            do n=ntcw,ntcw+nncl-1

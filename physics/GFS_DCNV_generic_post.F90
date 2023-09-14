@@ -15,8 +15,9 @@
       index_of_temperature, index_of_x_wind, index_of_y_wind, ntqv, gq0, save_q,  &
       cnvw, cnvc, cnvw_phy_f3d, cnvc_phy_f3d, flag_for_dcnv_generic_tend,         &
       ntcw,ntiw,ntclamt,ntrw,ntsw,ntrnc,ntsnc,ntgl,                               &
-      ntgnc, nthl, nthnc, nthv, ntgv, ntsigma, ntrac,clw,                         &
-      satmedmf, trans_trac, errmsg, errflg)
+      ntgnc, nthl, nthnc, nthv, ntgv, ntrac,clw,                                  &
+      satmedmf, trans_trac, do_mlp_cnv, tcnvtend, qcnvtend, &
+      ucnvtend,vcnvtend,errmsg, errflg)
 
 
       use machine,               only: kind_phys
@@ -24,7 +25,7 @@
       implicit none
 
       integer, intent(in) :: im, levs, nsamftrac
-      logical, intent(in) :: lssav, ldiag3d, qdiag3d, ras, cscnv
+      logical, intent(in) :: lssav, ldiag3d, qdiag3d, ras, cscnv,do_mlp_cnv
       logical, intent(in) :: flag_for_dcnv_generic_tend
 
       real(kind=kind_phys), intent(in) :: frain, dtf
@@ -41,11 +42,13 @@
       real(kind=kind_phys), dimension(:,:), intent(inout) :: upd_mf, dwn_mf, det_mf
       real(kind=kind_phys), dimension(:,:), intent(inout) :: cnvw, cnvc
 
+!mlp
+      real(kind=kind_phys), dimension(im,levs), intent(inout) :: tcnvtend,qcnvtend,ucnvtend,vcnvtend
       real(kind=kind_phys), dimension(:,:,:), intent(inout) :: dtend
       integer, intent(in) :: dtidx(:,:), index_of_process_dcnv, index_of_temperature, &
            index_of_x_wind, index_of_y_wind, ntqv
       integer, intent(in) :: ntcw,ntiw,ntclamt,ntrw,ntsw,ntrnc,ntsnc,ntgl,   &
-                             ntgnc, nthl, nthnc, nthv, ntgv, ntsigma, ntrac
+                             ntgnc, nthl, nthnc, nthv, ntgv, ntrac
       real(kind=kind_phys), dimension(:,:,:), intent(in) :: clw
 
 
@@ -112,7 +115,7 @@
                      n /= ntrw  .and. n /= ntsw  .and. n /= ntrnc   .and. &
                      n /= ntsnc .and. n /= ntgl  .and. n /= ntgnc   .and. &
                      n /= nthl  .and. n /= nthnc .and. n /= nthv    .and. &
-                     n /= ntgv  .and. n /= ntsigma) then
+                     n /= ntgv ) then
                    tracers = tracers + 1
                    idtend = dtidx(100+n,index_of_process_dcnv)
                    if(idtend>0) then
@@ -147,5 +150,27 @@
 
       endif ! if (lssav)
 
+!jwb/sam mlp:
+      if (do_mlp_cnv) then
+        !print*,"getting tend dcnv post"
+         do k=1,levs
+            do i=1,im
+              tcnvtend(i,k) = gt0(i,k)   - save_t(i,k)
+              qcnvtend(i,k) = gq0(i,k,ntqv) -save_q(i,k,ntqv)
+              ucnvtend(i,k) = gu0(i,k)   - save_u(i,k)
+              vcnvtend(i,k) = gv0(i,k)   - save_v(i,k)
+           ! if(tcnvtend(i,k).lt.0)then
+           !    print*,"after tcnvtend_cp ",tcnvtend(i,k),gt0(i,k),save_t(i,k)
+            !    print*,"after ucnvtend_cp ",ucnvtend(1,k)
+            !    print*,"after vcnvtend_cp ",vcnvtend(1,k)
+            !    print*,"after qcnvtend_cp ",qcnvtend(1,k)
+           !   endif
+
+            enddo
+          enddo
+            !print*,"max min qcnvtend in generic dcnv are " ,minval(qcnvtend),maxval(qcnvtend)
+        endif
+
     end subroutine GFS_DCNV_generic_post_run
+
     end module GFS_DCNV_generic_post

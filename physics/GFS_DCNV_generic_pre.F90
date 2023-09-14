@@ -13,16 +13,18 @@
                                          gu0, gv0, gt0, gq0, nsamftrac, ntqv,            &
                                          save_u, save_v, save_t, save_q, clw,            &
                                          ntcw,ntiw,ntclamt,ntrw,ntsw,ntrnc,ntsnc,ntgl,   &
-                                         ntgnc, nthl, nthnc, nthv, ntgv,ntsigma,         &
+                                         ntgnc, nthl, nthnc, nthv, ntgv,                 &
                                          cscnv, satmedmf, trans_trac, ras, ntrac,        &
-                                         dtidx, index_of_process_dcnv, errmsg, errflg)
+                                         dtidx, index_of_process_dcnv, do_mlp_cnv,errmsg, errflg)
 
       use machine, only: kind_phys
 
       implicit none
 
+!mlp
+      logical, intent(in) :: do_mlp_cnv
       integer, intent(in) :: im, levs, nsamftrac, ntqv, index_of_process_dcnv, dtidx(:,:), &
-           ntcw,ntiw,ntclamt,ntrw,ntsw,ntrnc,ntsnc,ntgl,ntrac,ntgnc,nthl,nthnc,nthv,ntgv,ntsigma
+           ntcw,ntiw,ntclamt,ntrw,ntsw,ntrnc,ntsnc,ntgl,ntrac,ntgnc,nthl,nthnc,nthv,ntgv
       logical, intent(in) :: ldiag3d, qdiag3d, do_cnvgwd, cplchm
       real(kind=kind_phys), dimension(:,:),   intent(in)    :: gu0
       real(kind=kind_phys), dimension(:,:),   intent(in)    :: gv0
@@ -58,6 +60,18 @@
             save_t(i,k) = gt0(i,k)
           enddo
         enddo
+!jwb/sam mlp
+       elseif(do_mlp_cnv)then
+        !print*,"getting tend dcnv pre"
+        do k=1,levs
+          do i=1,im
+            save_t(i,k) = gt0(i,k)
+            save_u(i,k) = gu0(i,k)
+            save_v(i,k) = gv0(i,k)
+            save_q(i,k,ntqv) = gq0(i,k,ntqv)
+          enddo
+        enddo
+!jwb/sam mlp
       endif
 
       if ((ldiag3d.and.qdiag3d) .or. cplchm) then
@@ -68,7 +82,7 @@
                     n /= ntrw  .and. n /= ntsw  .and. n /= ntrnc   .and. &
                     n /= ntsnc .and. n /= ntgl  .and. n /= ntgnc   .and. &
                     n /= nthl  .and. n /= nthnc .and. n /= nthv    .and. &
-                    n /= ntgv  .and. n/= ntsigma) then
+                    n /= ntgv ) then
                   tracers = tracers + 1
                   if(dtidx(100+n,index_of_process_dcnv)>0) then
                      save_q(:,:,n) = clw(:,:,tracers)

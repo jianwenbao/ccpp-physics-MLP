@@ -274,13 +274,6 @@
   dimensions = ()
   type = logical
   intent = in
-[mraerosol]
-  standard_name = do_merra2_aerosol_awareness
-  long_name = flag for merra2 aerosol-aware physics for example the thompson microphysics
-  units = flag
-  dimensions = ()
-  type = logical
-  intent = in
 [nssl_ccn_on]
   standard_name = nssl_ccn_on
   long_name = CCN activation flag in NSSL micro
@@ -773,45 +766,6 @@
   type = real
   kind = kind_phys
   intent = in
-[use_med_flux]
-  standard_name = do_mediator_atmosphere_ocean_fluxes
-  long_name = flag for using atmosphere-ocean fluxes from mediator
-  units = flag
-  dimensions = ()
-  type = logical
-  intent = in
-[dqsfc_med]
-  standard_name = surface_upward_latent_heat_flux_over_ocean_from_mediator
-  long_name = sfc latent heat flux input over ocean for coupling
-  units = W m-2
-  dimensions = (horizontal_loop_extent)
-  type = real
-  kind = kind_phys
-  intent = in
-[dtsfc_med]
-  standard_name = surface_upward_sensible_heat_flux_over_ocean_from_mediator
-  long_name = sfc sensible heat flux input over ocean for coupling
-  units = W m-2
-  dimensions = (horizontal_loop_extent)
-  type = real
-  kind = kind_phys
-  intent = in
-[dusfc_med]
-  standard_name = surface_x_momentum_flux_over_ocean_from_mediator
-  long_name = sfc x momentum flux over ocean for coupling
-  units = Pa
-  dimensions = (horizontal_loop_extent)
-  type = real
-  kind = kind_phys
-  intent = in
-[dvsfc_med]
-  standard_name = surface_y_momentum_flux_over_ocean_from_mediator
-  long_name = sfc y momentum flux over ocean for coupling
-  units = Pa
-  dimensions = (horizontal_loop_extent)
-  type = real
-  kind = kind_phys
-  intent = in
 [wet]
   standard_name = flag_nonzero_wet_surface_fraction
   long_name = flag indicating presence of some ocean or lake surface area fraction
@@ -961,6 +915,45 @@
   type = real
   kind = kind_phys
   intent = in
+[do_mlp_pbl]
+  standard_name = flag_for_mlp_stochastic_physics_perturbations_from_pbl
+  long_name = flag for mlp stochastic physics perturbations from pbl
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+[tpbltend]
+  standard_name = air_temperature_tendency_due_to_pbl_for_mlp
+  long_name = temperature tendency due to pbl for mlp
+  units = K
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[qpbltend]
+  standard_name = water_vapor_specific_humidity_tendency_due_to_pbl_for_mlp
+  long_name = water_vapor_specific_humidity tendency due to pbl for mlp
+  units = kg kg-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[upbltend]
+  standard_name = x_wind_tendency_due_to_pbl_for_mlp
+  long_name = x-wind tendency due to pbl for mlp
+  units = m s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+[vpbltend]
+  standard_name = y_wind_tendency_due_to_pbl_for_mlp
+  long_name = y-wind tendency due to pbl for mlp
+  units = m s-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
 [errmsg]
   standard_name = ccpp_error_message
   long_name = error message for error handling in CCPP
