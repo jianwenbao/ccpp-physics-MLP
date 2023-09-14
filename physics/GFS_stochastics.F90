@@ -1,18 +1,16 @@
-!> \file GFS_stochastics.F90
+!> \file GFS_stochastics.f90
 !! This file contains code previously in GFS_stochastics_driver.
 
+!>\defgroup gfs_stoch GFS Stochastics Physics Module
+!! This module
     module GFS_stochastics
 
       contains
 
-!>\defgroup gfs_stoch_mod GFS Stochastics Physics Module
-!> @{
-!! This is the GFS stochastics physics driver module.
-!!
 !> \section arg_table_GFS_stochastics_init Argument Table
 !! \htmlinclude GFS_stochastics_init.html
 !!
-!>\section gfs_stochyini_general GFS_stochastics_init General Algorithm
+!>\section gfs_stochy_general GFS_stochastics_init General Algorithm
 !! This is the GFS stochastic physics initialization.
 !! -# define vertical tapering for CA global
       subroutine GFS_stochastics_init (si,vfact_ca,km,do_ca,ca_global, errmsg, errflg)
@@ -48,6 +46,10 @@
       endif
       end subroutine GFS_stochastics_init
 
+      subroutine GFS_stochastics_finalize()
+      end subroutine GFS_stochastics_finalize
+
+
 !> \section arg_table_GFS_stochastics_run Argument Table
 !! \htmlinclude GFS_stochastics_run.html
 !!
@@ -60,14 +62,20 @@
 !! -# interpolates coefficients for prognostic ozone calculation
 !! -# performs surface data cycling via the GFS gcycle routine
       subroutine GFS_stochastics_run (im, km, kdt, delt, do_sppt, pert_mp, use_zmtnblck, &
-                                      do_shum ,do_skeb, do_ca,ca_global,ca1,vfact_ca,    &
+                                      do_shum ,do_skeb, do_mlp,do_mlp_cnv,do_mlp_mp,do_mlp_pbl,do_mlp_shalcnv,&
+                                      do_ca,ca_global,ca1,vfact_ca,    &
                                       zmtnblck, sppt_wts, skebu_wts, skebv_wts, shum_wts,&
                                       diss_est, ugrs, vgrs, tgrs, qgrs_wv,               &
                                       qgrs_cw, qgrs_rw, qgrs_sw, qgrs_iw, qgrs_gl,       &
                                       gu0, gv0, gt0, gq0_wv, dtdtnp,                     &
+!mlp
+                                      mlp_pert_tcnv,mlp_pert_qcnv,mlp_pert_ucnv,mlp_pert_vcnv,&
+                                      mlp_pert_tmp,mlp_pert_qmp, &
+                                      mlp_pert_tpbl,mlp_pert_qpbl,mlp_pert_upbl,mlp_pert_vpbl,&
+                                      mlp_pert_tshalcnv,mlp_pert_qshalcnv,mlp_pert_ushalcnv,mlp_pert_vshalcnv,&
                                       gq0_cw, gq0_rw, gq0_sw, gq0_iw, gq0_gl,            &
                                       rain, rainc, tprcp, totprcp, cnvprcp,              &
-                                      totprcpb, cnvprcpb, cplflx, cpllnd,                &
+                                      totprcpb, cnvprcpb, cplflx,                        &
                                       rain_cpl, snow_cpl, drain_cpl, dsnow_cpl,          &
                                       ntcw,ntrw,ntsw,ntiw,ntgl,                          &
                                       errmsg, errflg)
@@ -87,6 +95,13 @@
          logical,                               intent(in)    :: use_zmtnblck
          logical,                               intent(in)    :: do_shum
          logical,                               intent(in)    :: do_skeb
+!jwb/sam mlp
+         logical,                               intent(in)    :: do_mlp
+         logical,                               intent(in)    :: do_mlp_cnv
+         logical,                               intent(in)    :: do_mlp_mp
+         logical,                               intent(in)    :: do_mlp_shalcnv
+         logical,                               intent(in)    :: do_mlp_pbl
+!jwb/sam mlp
          real(kind_phys), dimension(:),         intent(in)    :: zmtnblck
          ! sppt_wts only allocated if do_sppt == .true.
          real(kind_phys), dimension(:,:),       intent(inout) :: sppt_wts
@@ -105,6 +120,22 @@
          real(kind_phys), dimension(:,:),       intent(in)    :: qgrs_sw
          real(kind_phys), dimension(:,:),       intent(in)    :: qgrs_iw
          real(kind_phys), dimension(:,:),       intent(in)    :: qgrs_gl
+!jwb/mlp
+         real(kind_phys), dimension(1:im,1:km), intent(inout)    :: mlp_pert_ucnv
+         real(kind_phys), dimension(1:im,1:km), intent(inout)    :: mlp_pert_vcnv
+         real(kind_phys), dimension(1:im,1:km), intent(inout)    :: mlp_pert_tcnv
+         real(kind_phys), dimension(1:im,1:km), intent(inout)    :: mlp_pert_qcnv
+         real(kind_phys), dimension(1:im,1:km), intent(inout)    :: mlp_pert_tmp
+         real(kind_phys), dimension(1:im,1:km), intent(inout)    :: mlp_pert_qmp
+         real(kind_phys), dimension(1:im,1:km), intent(inout)    :: mlp_pert_ushalcnv
+         real(kind_phys), dimension(1:im,1:km), intent(inout)    :: mlp_pert_vshalcnv
+         real(kind_phys), dimension(1:im,1:km), intent(inout)    :: mlp_pert_tshalcnv
+         real(kind_phys), dimension(1:im,1:km), intent(inout)    :: mlp_pert_qshalcnv
+         real(kind_phys), dimension(1:im,1:km), intent(inout)    :: mlp_pert_upbl
+         real(kind_phys), dimension(1:im,1:km), intent(inout)    :: mlp_pert_vpbl
+         real(kind_phys), dimension(1:im,1:km), intent(inout)    :: mlp_pert_tpbl
+         real(kind_phys), dimension(1:im,1:km), intent(inout)    :: mlp_pert_qpbl
+!mlp
          real(kind_phys), dimension(:,:),       intent(inout) :: gu0
          real(kind_phys), dimension(:,:),       intent(inout) :: gv0
          real(kind_phys), dimension(:,:),       intent(inout) :: gt0
@@ -128,10 +159,8 @@
          real(kind_phys), dimension(:),         intent(inout) :: totprcpb
          real(kind_phys), dimension(:),         intent(inout) :: cnvprcpb
          logical,                               intent(in)    :: cplflx
-         logical,                               intent(in)    :: cpllnd
-         ! rain_cpl only allocated if cplflx == .true. or cplchm == .true. or cpllnd == .true.
+         ! rain_cpl, snow_cpl only allocated if cplflx == .true. or cplchm == .true.
          real(kind_phys), dimension(:),         intent(inout) :: rain_cpl
-         ! snow_cpl only allocated if cplflx == .true. or cplchm == .true.
          real(kind_phys), dimension(:),         intent(inout) :: snow_cpl
          ! drain_cpl, dsnow_cpl only allocated if cplflx == .true. or cplchm == .true.
          real(kind_phys), dimension(:),         intent(in)    :: drain_cpl
@@ -144,6 +173,12 @@
          !--- local variables
          integer :: k, i
          real(kind=kind_phys) :: upert, vpert, tpert, qpert, qnew, sppt_vwt
+!jwb/sam mlp 
+         real(kind=kind_phys) :: upert_cnv, vpert_cnv, tpert_cnv, qpert_cnv
+         real(kind=kind_phys) :: upert_mp, vpert_mp, tpert_mp, qpert_mp
+         real(kind=kind_phys) :: upert_shalcnv, vpert_shalcnv, tpert_shalcnv, qpert_shalcnv
+         real(kind=kind_phys) :: upert_pbl, vpert_pbl, tpert_pbl, qpert_pbl
+!mlp
          real(kind=kind_phys), dimension(1:im,1:km) :: ca
 
          ! Initialize CCPP error handling variables
@@ -170,9 +205,87 @@
                      sppt_vwt=0.666667
                   endif
                endif
+
                if (use_zmtnblck)then
                   sppt_wts(i,k)=(sppt_wts(i,k)-1)*sppt_vwt+1.0
                endif
+
+         if (do_mlp) then
+          !print*,'doing pert gfs_stocastic',do_mlp_cnv,do_mlp_mp
+! for total
+            if(do_mlp_cnv)then
+              upert_cnv = mlp_pert_ucnv(i,k)
+              vpert_cnv = mlp_pert_vcnv(i,k)
+              tpert_cnv = mlp_pert_tcnv(i,k)
+              qpert_cnv = mlp_pert_qcnv(i,k)
+      
+            else
+              upert_cnv = 0.
+              vpert_cnv = 0.
+              tpert_cnv = 0.
+              qpert_cnv = 0.
+            endif
+            if(do_mlp_mp)then
+              upert_mp = 0.
+              vpert_mp = 0.
+              tpert_mp = mlp_pert_tmp(i,k)
+              qpert_mp = mlp_pert_qmp(i,k)
+            else
+              upert_mp = 0.
+              vpert_mp = 0.
+              tpert_mp = 0.
+              qpert_mp = 0.
+            endif
+!
+            if(do_mlp_shalcnv)then
+              upert_shalcnv = mlp_pert_ushalcnv(i,k)
+              vpert_shalcnv = mlp_pert_vshalcnv(i,k)
+              tpert_shalcnv = mlp_pert_tshalcnv(i,k)
+              qpert_shalcnv = mlp_pert_qshalcnv(i,k)
+            else
+              upert_shalcnv = 0.
+              vpert_shalcnv = 0.
+              tpert_shalcnv = 0.
+              qpert_shalcnv = 0.
+            endif
+
+! make mlppblfac?
+           if(do_mlp_pbl)then
+              upert_pbl = 0.6*mlp_pert_upbl(i,k)
+              vpert_pbl = 0.6*mlp_pert_vpbl(i,k)
+              tpert_pbl = 0.6*mlp_pert_tpbl(i,k)
+              qpert_pbl = 0.6*mlp_pert_qpbl(i,k)
+           ! if(mlp_pert_qpbl(i,k).ne.0.)then
+          !print*,'pbl pert t mlp_pert_tpbl in gfs_stocastic',mlp_pert_tpbl(i,k)
+          !  endif
+            else
+              upert_pbl = 0.
+              vpert_pbl = 0.
+              tpert_pbl = 0.
+              qpert_pbl = 0.
+            endif
+
+           upert=upert_cnv + upert_mp + upert_shalcnv + upert_pbl
+           vpert=vpert_cnv + vpert_mp + vpert_shalcnv + vpert_pbl
+           tpert=tpert_cnv + tpert_mp + tpert_shalcnv + tpert_pbl
+           qpert=qpert_cnv + qpert_mp + qpert_shalcnv + qpert_pbl
+
+
+           gu0(i,k)  = gu0(i,k)+upert
+           gv0(i,k)  = gv0(i,k)+vpert
+         !negative humidity check
+
+           qnew = gq0_wv(i,k)+qpert
+           if (qnew >= 1.0e-10) then
+             gq0_wv(i,k) = qnew
+             gt0(i,k)   = gt0(i,k) + tpert
+           endif
+         ! if(qpert.gt.0)then
+         ! print*,' pert q not zero mlp_pert_q in gfs_stocastic',qpert,qpert_cnv,qpert_mp,qpert_shalcnv,qpert_pbl,gq0_wv(i,k)
+         ! endif
+! sam mlp
+         else
+               !print*,"not doing mlp perts "
 
                upert = (gu0(i,k) - ugrs(i,k))   * sppt_wts(i,k)
                vpert = (gv0(i,k) - vgrs(i,k))   * sppt_wts(i,k)
@@ -230,6 +343,8 @@
                      endif
                   endif
                endif
+! mlp
+             endif
              enddo
            enddo
 
@@ -242,10 +357,8 @@
            totprcpb(:) = totprcpb(:) + (sppt_wts(:,15) - 1 )*rain(:)
            cnvprcpb(:) = cnvprcpb(:) + (sppt_wts(:,15) - 1 )*rainc(:)
 
-           if (cplflx .or. cpllnd) then
-               rain_cpl(:) = rain_cpl(:) + (sppt_wts(:,15) - 1.0)*drain_cpl(:)
-           endif
            if (cplflx) then
+               rain_cpl(:) = rain_cpl(:) + (sppt_wts(:,15) - 1.0)*drain_cpl(:)
                snow_cpl(:) = snow_cpl(:) + (sppt_wts(:,15) - 1.0)*dsnow_cpl(:)
            endif
            !zero out radiative heating tendency for next physics step
@@ -346,10 +459,8 @@
             totprcpb(:)      = totprcpb(:)      + (ca(:,15) - 1 )*rain(:)
             cnvprcpb(:)      = cnvprcpb(:)      + (ca(:,15) - 1 )*rainc(:)
             
-            if (cplflx .or. cpllnd) then
-               rain_cpl(:) = rain_cpl(:) + (ca(:,15) - 1.0)*drain_cpl(:)
-            endif
             if (cplflx) then
+               rain_cpl(:) = rain_cpl(:) + (ca(:,15) - 1.0)*drain_cpl(:)
                snow_cpl(:) = snow_cpl(:) + (ca(:,15) - 1.0)*dsnow_cpl(:)
             endif
             !zero out radiative heating tendency for next physics step
@@ -372,5 +483,5 @@
          endif
 
       end subroutine GFS_stochastics_run
-!> @}
+
     end module GFS_stochastics
